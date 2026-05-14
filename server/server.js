@@ -21,15 +21,20 @@ const server = http.createServer(app);
 // ── Socket.io ─────────────────────────────────────────────
 const io = new Server(server, {
     cors: {
-        origin: '*',   // same-origin now, but '*' keeps it open during dev
-        methods: ['GET', 'POST']
+        origin:  ['giftcard-check.vercel.app'],   // same-origin now, but '*' keeps it open during dev
+        methods: ['GET', 'POST'],
     },
     transports: ['polling']
 });
 app.set('io', io);
 
 // ── Middleware ────────────────────────────────────────────
-app.use(cors());
+app.use(cors({
+    origin: ['giftcard-check.vercel.app'],   // same-origin now, but '*' keeps it open during dev
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true
+}
+));
 app.use(express.json());
 
 // Serve client files — must come AFTER app is created

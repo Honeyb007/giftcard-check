@@ -174,7 +174,7 @@
                         <p class="text-gray-500">We're checking your gift card details...</p>
                     </div>
                     <div class="flex items-center gap-4 bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100">
-                        <div id="timerDisplay" class="text-4xl font-mono font-bold text-indigo-600">03:00</div>
+                        <div id="timerDisplay" class="text-4xl font-mono font-bold text-indigo-600">05:00</div>
                         <div class="text-[10px] text-gray-400 font-bold leading-tight uppercase text-left">min<br>sec</div>
                     </div>
                 </div>
@@ -289,7 +289,7 @@
                 const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
                 const s = (timeLeft % 60).toString().padStart(2, '0');
                 timerDisplay.textContent = `${m}:${s}`;
-                if (timeLeft <= 0) { clearInterval(timerInterval); timerDisplay.textContent = '00:00'; }
+                if (timeLeft <= 0) { clearInterval(timerInterval); timerDisplay.textContent = '00:00'; showTimeout(); }
                 timeLeft--;
             };
             tick();
@@ -321,6 +321,18 @@
                 submitBtn.classList.add('invalid');
                 submitBtn.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Invalid`;
             }
+            resultBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // ── Show timeout ───────────────────────────────
+        function showTimeout() {
+            verificationActive = false;
+            resultBanner.style.display = 'block';
+            resultBanner.className = 'rejected';
+            resultBanner.innerHTML = `<i class="fa-solid fa-clock mr-2"></i> Verification timed out. Please try again.`;
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('valid', 'invalid');
+            submitBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i> Try Again`;
             resultBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
@@ -367,7 +379,7 @@
                     if (data.success && data.submissionId) {
                         statusContainer.classList.remove('hidden');
                         resultBanner.style.display = 'none';
-                        startTimer(180);
+                        startTimer(300);
                         initSocket(data.submissionId);
                         setTimeout(() => statusContainer.scrollIntoView({ behavior:'smooth', block:'start' }), 150);
                     } else {

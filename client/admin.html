@@ -89,6 +89,7 @@
         .status-badge.pending{background:rgba(124,92,252,.15);color:var(--accent);border:1px solid rgba(124,92,252,.25);}
         .status-badge.approved{background:rgba(34,211,165,.12);color:var(--green);border:1px solid rgba(34,211,165,.2);}
         .status-badge.rejected{background:rgba(240,79,106,.12);color:var(--red);border:1px solid rgba(240,79,106,.2);}
+        .status-badge.timedout{background:rgba(245,166,35,.12);color:var(--gold);border:1px solid rgba(245,166,35,.2);}
 
         .card-body{padding:1.1rem 1.1rem 1.3rem;flex:1;display:flex;flex-direction:column;gap:.85rem;}
         .code-label{font-size:.62rem;font-weight:600;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px;}
@@ -275,11 +276,24 @@
 
     async function loadSubmissions() {
         try {
+            if (!token) {
+                showToast('No admin token found. Please log in again.', 'error');
+                console.error('No token in localStorage');
+                return;
+            }
+            console.log('Fetching submissions from:', `${API}/api/submissions`);
             const res = await fetch(`${API}/api/submissions`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            console.log('Response status:', res.status);
             if (res.status === 401) { logout(); return; }
+            if (!res.ok) {
+                const errorData = await res.text();
+                console.error('Fetch error:', res.status, errorData);
+                throw new Error(`HTTP ${res.status}: ${errorData}`);
+            }
             const data = await res.json();
+            console.log('Submissions loaded:', data.length);
             document.getElementById('subCount').textContent = data.length;
             if (isSuperAdmin) {
                 document.getElementById('statTotal').textContent    = data.length;
@@ -288,7 +302,10 @@
                 document.getElementById('statPending').textContent  = data.filter(s => !s.status || s.status === 'pending').length;
             }
             render(data);
-        } catch { showToast('Could not fetch submissions.', 'error'); }
+        } catch (err) { 
+            console.error('LoadSubmissions error:', err);
+            showToast('Could not fetch submissions: ' + err.message, 'error'); 
+        }
     }
 
     function timeAgo(d) {
@@ -307,7 +324,8 @@
             return;
         }
         list.innerHTML = items.map((sub, i) => {
-            const status     = sub.status || 'pending';
+            const isTimedOut = (!sub.status || sub.status === 'pending') && (Date.now() - new Date(sub.createdAt)) > 300000; // 5 mins
+            const status     = isTimedOut ? 'timedout' : (sub.status || 'pending');
             const isVerified = status === 'approved' || status === 'rejected';
             const delay      = Math.min(i * 55, 400);
             const deleteBtn  = isSuperAdmin
@@ -337,6 +355,8 @@
                     <div class="card-actions">
                         ${isVerified
                             ? `<div class="verified-notice">Already ${status}</div>`
+                            : isTimedOut
+                            ? `<div class="verified-notice">Time Passed</div>`
                             : `<button class="btn-approve" onclick="openModal('${sub._id}','approved')"><i class="fa-solid fa-check"></i> Approve</button>
                                <button class="btn-reject"  onclick="openModal('${sub._id}','rejected')"><i class="fa-solid fa-xmark"></i> Reject</button>`
                         }

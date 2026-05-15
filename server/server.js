@@ -21,7 +21,7 @@ const server = http.createServer(app);
 // ── Socket.io ─────────────────────────────────────────────
 const io = new Server(server, {
     cors: {
-        origin:  ['giftcard-check.vercel.app'],   // same-origin now, but '*' keeps it open during dev
+        origin:  ['https://giftcard-check.vercel.app', 'http://localhost:3000', 'http://localhost:8080'],   // Allow production and common dev ports
         methods: ['GET', 'POST'],
     },
     transports: ['polling']
@@ -30,7 +30,7 @@ app.set('io', io);
 
 // ── Middleware ────────────────────────────────────────────
 app.use(cors({
-    origin: ['giftcard-check.vercel.app'],   // same-origin now, but '*' keeps it open during dev
+    origin: ['https://giftcard-check.vercel.app', 'http://localhost:3000', 'http://localhost:8080'],   // Allow production and common dev ports
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true
 }
